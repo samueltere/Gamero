@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Track": {
+      "title": "Track",
+      "description": "A music track published to the platform.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "artist": { "type": "string" },
+        "albumArt": { "type": "string" },
+        "url": { "type": "string" },
+        "duration": { "type": "number" },
+        "source": { "type": "string" },
+        "lyrics": { "type": "string" },
+        "genre": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "description": { "type": "string" },
+        "uploaderName": { "type": "string" }
+      },
+      "required": ["id", "title", "artist", "url", "userId"]
+    },
+    "Playlist": {
+      "title": "Playlist",
+      "description": "A collection of tracks created by a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "userId": { "type": "string" },
+        "trackIds": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "userId"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and settings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "/tracks/{trackId}": {
+      "schema": "Track",
+      "description": "Global collection of tracks."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User private data."
+    },
+    "/users/{userId}/playlists/{playlistId}": {
+      "schema": "Playlist",
+      "description": "User-specific playlists."
+    }
+  }
+}

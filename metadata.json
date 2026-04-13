@@ -1,0 +1,6 @@
+{
+  "name": "Gamero",
+  "description": "A music streaming platform focused on artist listening, community uploads, and studio tools for draft creation and cover concepts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["Music Streaming", "Artist Profiles", "Community Uploads", "Studio Drafts"]
+}

@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+
+  --color-gamero-bg: #050816;
+  --color-gamero-lime: #93f872;
+  --color-gamero-panel: #0d1324;
+  --color-gamero-surface: #141c30;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background: var(--color-gamero-bg);
+  }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at top, rgba(147, 248, 114, 0.1), transparent 32%),
+      linear-gradient(180deg, #0b1020 0%, #050816 100%);
+    color: white;
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: rgba(147, 248, 114, 0.25);
+    color: white;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.gamero-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.gamero-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  height: 16px;
+  width: 16px;
+  border-radius: 999px;
+  background: var(--color-gamero-lime);
+  box-shadow: 0 0 0 4px rgba(147, 248, 114, 0.18);
+}
+
+.gamero-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.gamero-slider::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-gamero-lime);
+  box-shadow: 0 0 0 4px rgba(147, 248, 114, 0.18);
+}
