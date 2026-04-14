@@ -161,11 +161,19 @@ export const Create: React.FC = () => {
     <div className="h-full overflow-y-auto px-4 py-6 md:px-8 md:py-8">
       <div className="mx-auto max-w-7xl space-y-8">
         <Card className="rounded-[34px] p-6 md:p-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Studio</p>
-          <h1 className="mt-3 font-display text-4xl font-semibold">Upload original releases or sketch a new direction in a few steps.</h1>
-          <p className="mt-4 max-w-3xl text-base leading-7 text-zinc-400">
-            Gamero puts finished music first. Publish real songs with cover art from your device, or use the studio panel to shape a fast draft when you want a starting point.
-          </p>
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <p className="text-xs uppercase tracking-[0.28em] text-[var(--gamero-muted)]">Creation lab</p>
+              <h1 className="mt-3 font-display text-4xl font-semibold">Upload original releases or shape a new sound inside Gamero&apos;s living studio.</h1>
+              <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--gamero-muted)]">
+                The studio should feel magical, not like a boring form. Publish real songs from your device, or use the orb-inspired draft flow when you want to explore a fresh direction.
+              </p>
+            </div>
+            <div className="relative mx-auto h-52 w-52">
+              <div className="gamero-orb absolute inset-0 rounded-[38%] blur-[1px]" />
+              <div className="absolute inset-[18%] rounded-[42%] border border-white/15 bg-white/10 backdrop-blur-md" />
+            </div>
+          </div>
         </Card>
 
         <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -294,7 +302,7 @@ export const Create: React.FC = () => {
                   <div>
                     <h2 className="font-display text-3xl font-semibold">Build a fast draft</h2>
                     <p className="mt-3 text-sm leading-7 text-zinc-400">
-                      Start from a mood, genre, or short idea. Gamero will prepare a playable draft with lyrics and a fresh cover concept.
+                      Start from a mood, genre, or short idea. Gamero turns that into a playable draft with lyrics and a cover concept that feels alive.
                     </p>
                   </div>
                   <Button variant="outline" className="rounded-full px-5" onClick={() => setCoverRefreshCount((current) => current + 1)}>
@@ -303,6 +311,16 @@ export const Create: React.FC = () => {
                 </div>
 
                 <div className="mt-8 space-y-5">
+                  <div className="relative overflow-hidden rounded-[30px] border border-[var(--gamero-border)] bg-white/8 p-5">
+                    <div className="gamero-orb absolute left-[-20px] top-[-16px] h-28 w-28 opacity-85" />
+                    <div className="relative">
+                      <p className="text-xs uppercase tracking-[0.28em] text-[var(--gamero-muted)]">Creation orb</p>
+                      <p className="mt-3 max-w-lg text-sm leading-7 text-[var(--gamero-muted)]">
+                        Type a vibe, let the orb react, and shape a first draft without turning the process into a technical dashboard.
+                      </p>
+                    </div>
+                  </div>
+
                   <textarea
                     value={studioPrompt}
                     onChange={(event) => setStudioPrompt(event.target.value)}

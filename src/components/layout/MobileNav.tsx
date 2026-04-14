@@ -12,7 +12,7 @@ const items = [
 
 export const MobileNav: React.FC = () => {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-black/85 px-3 py-2 backdrop-blur-xl md:hidden">
+    <nav className="fixed inset-x-3 bottom-3 z-40 rounded-[28px] border border-[var(--gamero-border)] bg-[color-mix(in_srgb,var(--gamero-bg)_70%,transparent)] px-3 py-2 shadow-[0_20px_50px_rgba(15,16,32,0.28)] backdrop-blur-xl md:hidden">
       <div className="grid grid-cols-4 gap-1">
         {items.map((item) => (
           <NavLink
@@ -20,8 +20,8 @@ export const MobileNav: React.FC = () => {
             to={item.path}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center gap-1 rounded-2xl py-2 text-[11px] text-zinc-500 transition-colors',
-                isActive && 'text-gamero-lime',
+                'flex flex-col items-center gap-1 rounded-[20px] py-2 text-[11px] text-[var(--gamero-muted)] transition-all',
+                isActive && 'bg-white/10 text-[var(--gamero-accent)]',
               )
             }
           >

@@ -18,14 +18,14 @@ export const Sidebar: React.FC = () => {
   const { savedTracks, signIn, user, userUploads } = useMusic();
 
   return (
-    <aside className="hidden h-full w-72 flex-col border-r border-white/8 bg-black/35 p-6 md:flex">
+    <aside className="hidden h-full w-80 flex-col border-r border-[var(--gamero-border)] bg-[color-mix(in_srgb,var(--gamero-bg)_74%,transparent)] p-6 backdrop-blur-xl md:flex">
       <div className="mb-10 flex items-center gap-3 px-2">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gamero-lime text-black shadow-[0_12px_30px_rgba(147,248,114,0.35)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-[22px] bg-[var(--gamero-gradient)] text-white shadow-[0_14px_40px_rgba(167,139,250,0.35)]">
           <Disc3 className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-[0.32em] text-zinc-500">Music Platform</p>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Gamero</h1>
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--gamero-muted)]">Living Sound Lab</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Gamero</h1>
         </div>
       </div>
 
@@ -36,8 +36,8 @@ export const Sidebar: React.FC = () => {
             to={item.path}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors',
-                isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:bg-white/6 hover:text-white',
+                'flex items-center gap-3 rounded-[24px] px-4 py-3 text-sm font-medium transition-all duration-200',
+                isActive ? 'bg-white/12 text-[var(--gamero-text)] shadow-[0_16px_30px_rgba(167,139,250,0.12)]' : 'text-[var(--gamero-muted)] hover:bg-white/8 hover:text-[var(--gamero-text)]',
               )
             }
           >
@@ -47,27 +47,28 @@ export const Sidebar: React.FC = () => {
         ))}
       </nav>
 
-      <Card className="mt-8 rounded-[24px] border-white/8 bg-white/[0.03] p-5">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-zinc-500">Your space</p>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-white/6 p-3">
-            <p className="text-2xl font-semibold text-white">{savedTracks.length}</p>
-            <p className="text-xs text-zinc-400">Saved tracks</p>
+      <Card className="mt-8 overflow-hidden rounded-[30px] p-5">
+        <div className="gamero-orb gamero-breathe absolute -right-8 top-5 h-28 w-28 opacity-65 blur-[2px]" />
+        <p className="relative text-[11px] uppercase tracking-[0.28em] text-[var(--gamero-muted)]">Your studio wing</p>
+        <div className="relative mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-[22px] bg-white/10 p-4">
+            <p className="text-2xl font-semibold">{savedTracks.length}</p>
+            <p className="text-xs text-[var(--gamero-muted)]">Saved tracks</p>
           </div>
-          <div className="rounded-2xl bg-white/6 p-3">
-            <p className="text-2xl font-semibold text-white">{userUploads.length}</p>
-            <p className="text-xs text-zinc-400">Uploads</p>
+          <div className="rounded-[22px] bg-white/10 p-4">
+            <p className="text-2xl font-semibold">{userUploads.length}</p>
+            <p className="text-xs text-[var(--gamero-muted)]">Uploads</p>
           </div>
         </div>
-        <p className="mt-4 text-sm leading-6 text-zinc-400">
-          Sign in with Google to sync your library, publish music, and keep your studio drafts in one place.
+        <p className="relative mt-4 text-sm leading-7 text-[var(--gamero-muted)]">
+          Gamero is meant to feel like a creator gallery. Sign in to sync your library, publish music, and shape your own visual music space.
         </p>
         {user ? (
-          <Button onClick={() => navigate('/studio')} className="mt-5 w-full justify-center rounded-2xl">
+          <Button onClick={() => navigate('/studio')} className="relative mt-5 w-full justify-center rounded-2xl">
             Open Studio
           </Button>
         ) : (
-          <Button onClick={signIn} className="mt-5 w-full justify-center rounded-2xl">
+          <Button onClick={signIn} className="relative mt-5 w-full justify-center rounded-2xl">
             Continue with Google
           </Button>
         )}

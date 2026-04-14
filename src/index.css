@@ -5,13 +5,41 @@
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
 
-  --color-gamero-bg: #050816;
-  --color-gamero-lime: #93f872;
-  --color-gamero-panel: #0d1324;
-  --color-gamero-surface: #141c30;
+  --color-gamero-bg: var(--gamero-bg);
+  --color-gamero-lime: var(--gamero-accent);
+  --color-gamero-panel: var(--gamero-panel);
+  --color-gamero-surface: var(--gamero-surface);
 }
 
 @layer base {
+  :root {
+    --gamero-bg: #0f1020;
+    --gamero-panel: rgba(24, 28, 54, 0.72);
+    --gamero-surface: rgba(255, 255, 255, 0.07);
+    --gamero-text: #f5f3ef;
+    --gamero-muted: rgba(245, 243, 239, 0.68);
+    --gamero-border: rgba(245, 243, 239, 0.12);
+    --gamero-accent: #a78bfa;
+    --gamero-accent-2: #ff7a8a;
+    --gamero-accent-3: #67e8f9;
+    --gamero-gradient: linear-gradient(135deg, #a78bfa 0%, #ff7a8a 52%, #67e8f9 100%);
+    --gamero-shadow: 0 30px 90px rgba(6, 10, 25, 0.32);
+  }
+
+  :root[data-theme='light'] {
+    --gamero-bg: #f5f3ef;
+    --gamero-panel: rgba(255, 255, 255, 0.76);
+    --gamero-surface: rgba(15, 16, 32, 0.06);
+    --gamero-text: #15172b;
+    --gamero-muted: rgba(21, 23, 43, 0.62);
+    --gamero-border: rgba(15, 16, 32, 0.12);
+    --gamero-accent: #8b5cf6;
+    --gamero-accent-2: #ff6b81;
+    --gamero-accent-3: #06b6d4;
+    --gamero-gradient: linear-gradient(135deg, #8b5cf6 0%, #ff6b81 54%, #06b6d4 100%);
+    --gamero-shadow: 0 24px 70px rgba(86, 74, 113, 0.18);
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -24,19 +52,35 @@
 
   html {
     font-family: var(--font-sans);
-    background: var(--color-gamero-bg);
+    background: var(--gamero-bg);
   }
 
   body {
     margin: 0;
     background:
-      radial-gradient(circle at top, rgba(147, 248, 114, 0.1), transparent 32%),
-      linear-gradient(180deg, #0b1020 0%, #050816 100%);
-    color: white;
+      radial-gradient(circle at 12% 18%, rgba(167, 139, 250, 0.24), transparent 26%),
+      radial-gradient(circle at 78% 16%, rgba(255, 122, 138, 0.18), transparent 24%),
+      radial-gradient(circle at 66% 80%, rgba(103, 232, 249, 0.16), transparent 24%),
+      linear-gradient(145deg, rgba(15, 16, 32, 0.98) 0%, rgba(21, 24, 44, 0.94) 32%, rgba(13, 16, 34, 1) 100%);
+    color: var(--gamero-text);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background 240ms ease, color 240ms ease;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02)),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    mix-blend-mode: soft-light;
+    opacity: 0.55;
+    z-index: 0;
   }
 
   button,
@@ -52,8 +96,95 @@
   }
 
   ::selection {
-    background: rgba(147, 248, 114, 0.25);
-    color: white;
+    background: rgba(167, 139, 250, 0.32);
+    color: var(--gamero-text);
+  }
+}
+
+@layer utilities {
+  .gamero-shell {
+    position: relative;
+    isolation: isolate;
+    background:
+      radial-gradient(circle at 14% 10%, rgba(167, 139, 250, 0.2), transparent 24%),
+      radial-gradient(circle at 78% 12%, rgba(255, 122, 138, 0.16), transparent 26%),
+      radial-gradient(circle at 80% 76%, rgba(103, 232, 249, 0.12), transparent 24%),
+      linear-gradient(180deg, color-mix(in srgb, var(--gamero-bg) 94%, #ffffff 6%) 0%, var(--gamero-bg) 100%);
+  }
+
+  .gamero-room {
+    background: color-mix(in srgb, var(--gamero-panel) 84%, transparent);
+    border: 1px solid var(--gamero-border);
+    box-shadow: var(--gamero-shadow);
+    backdrop-filter: blur(24px);
+  }
+
+  .gamero-text-muted {
+    color: var(--gamero-muted);
+  }
+
+  .gamero-gradient-text {
+    background: var(--gamero-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .gamero-gradient-border {
+    position: relative;
+  }
+
+  .gamero-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.45), rgba(255, 122, 138, 0.22), rgba(103, 232, 249, 0.34));
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .gamero-orb {
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.4), transparent 18%),
+      radial-gradient(circle at 62% 35%, rgba(103, 232, 249, 0.52), transparent 28%),
+      radial-gradient(circle at 52% 68%, rgba(255, 122, 138, 0.44), transparent 32%),
+      radial-gradient(circle at 24% 72%, rgba(167, 139, 250, 0.56), transparent 28%);
+    filter: saturate(115%);
+    animation: gamero-orb-drift 11s ease-in-out infinite alternate;
+  }
+
+  .gamero-breathe {
+    animation: gamero-breathe 7s ease-in-out infinite;
+  }
+}
+
+@keyframes gamero-breathe {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes gamero-orb-drift {
+  0% {
+    transform: scale(0.98) rotate(0deg);
+    border-radius: 40% 60% 54% 46% / 44% 42% 58% 56%;
+  }
+  50% {
+    transform: scale(1.02) rotate(4deg);
+    border-radius: 52% 48% 38% 62% / 52% 62% 38% 48%;
+  }
+  100% {
+    transform: scale(1.04) rotate(-5deg);
+    border-radius: 58% 42% 55% 45% / 38% 50% 50% 62%;
   }
 }
 
@@ -67,12 +198,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--gamero-text) 16%, transparent);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: color-mix(in srgb, var(--gamero-text) 24%, transparent);
 }
 
 .gamero-slider::-webkit-slider-runnable-track {
@@ -88,8 +219,8 @@
   height: 16px;
   width: 16px;
   border-radius: 999px;
-  background: var(--color-gamero-lime);
-  box-shadow: 0 0 0 4px rgba(147, 248, 114, 0.18);
+  background: var(--gamero-accent);
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.18);
 }
 
 .gamero-slider::-moz-range-track {
@@ -103,6 +234,6 @@
   width: 16px;
   border: 0;
   border-radius: 999px;
-  background: var(--color-gamero-lime);
-  box-shadow: 0 0 0 4px rgba(147, 248, 114, 0.18);
+  background: var(--gamero-accent);
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.18);
 }

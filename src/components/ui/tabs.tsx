@@ -47,7 +47,7 @@ export function Tabs({ defaultValue, value, onValueChange, className, children, 
 
 export function TabsList({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('inline-flex rounded-full border border-white/8 bg-white/5 p-1', className)} {...props}>
+    <div className={cn('inline-flex rounded-full border border-[var(--gamero-border)] bg-white/8 p-1', className)} {...props}>
       {children}
     </div>
   );
@@ -68,7 +68,7 @@ export function TabsTrigger({ className, value, children, ...props }: TabsTrigge
       type="button"
       className={cn(
         'rounded-full px-4 py-2 text-sm font-medium transition-colors',
-        isActive ? 'bg-gamero-lime text-black' : 'text-zinc-400 hover:text-white',
+        isActive ? 'bg-[var(--gamero-gradient)] text-white shadow-[0_10px_30px_rgba(167,139,250,0.2)]' : 'text-[var(--gamero-muted)] hover:text-[var(--gamero-text)]',
         className,
       )}
       onClick={() => tabs.setValue(value)}
