@@ -102,7 +102,7 @@ export const Create: React.FC = () => {
       setCoverPreview('');
     } catch (error) {
       console.error(error);
-      toast.error('Upload failed. Please check your files and try again.');
+      toast.error(getErrorMessage(error, 'Upload failed. Please check your files and try again.'));
     } finally {
       setIsUploading(false);
     }
@@ -430,3 +430,19 @@ export const Create: React.FC = () => {
     </div>
   );
 };
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    try {
+      const parsed = JSON.parse(error.message) as { error?: string };
+      if (parsed.error) {
+        return parsed.error;
+      }
+    } catch {
+      return error.message;
+    }
+    return error.message;
+  }
+
+  return fallback;
+}

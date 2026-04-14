@@ -10,17 +10,19 @@ export async function uploadToCloudinary(file: File, folder: string) {
     throw new Error('Cloudinary environment variables are missing.');
   }
 
+  const resourceType = getResourceType(file);
+
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', uploadPreset);
   formData.append('folder', folder);
 
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
     method: 'POST',
     body: formData,
   });
 
-  const payload = await response.json();
+  const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     throw new Error(payload.error?.message || 'Cloudinary upload failed.');
@@ -31,4 +33,16 @@ export async function uploadToCloudinary(file: File, folder: string) {
     publicId: String(payload.public_id || ''),
     secureUrl: String(payload.secure_url || ''),
   };
+}
+
+function getResourceType(file: File) {
+  if (file.type.startsWith('image/')) {
+    return 'image';
+  }
+
+  if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
+    return 'video';
+  }
+
+  return 'raw';
 }
