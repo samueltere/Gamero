@@ -22,7 +22,7 @@ export const AlbumPage: React.FC = () => {
         <div className="mx-auto max-w-4xl">
           <Card className="rounded-[34px] p-8 text-center">
             <h1 className="font-display text-3xl font-semibold">Album not found</h1>
-            <p className="mt-4 text-zinc-400">That album does not exist in the current Gamero catalog.</p>
+            <p className="mt-4 text-zinc-400">That album does not exist in the current Gemero catalog.</p>
             <Button onClick={() => navigate('/search')} className="mt-6 rounded-full px-6">
               Back to search
             </Button>
@@ -34,7 +34,7 @@ export const AlbumPage: React.FC = () => {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/album/${album.id}`;
-    const result = await shareLink(album.title, `Listen to ${album.title} on Gamero`, url).catch(() => 'copied');
+    const result = await shareLink(album.title, `Listen to ${album.title} on Gemero`, url).catch(() => 'copied');
     toast.success(result === 'shared' ? 'Album shared.' : 'Album link copied.');
   };
 

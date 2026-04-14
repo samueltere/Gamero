@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: gamero
+    name: gemero
     runtime: static
     plan: free
     branch: main

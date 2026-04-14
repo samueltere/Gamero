@@ -24,7 +24,7 @@ export const Sidebar: React.FC = () => {
         <AppLogo className="h-14 w-14 rounded-[22px] p-1.5" />
         <div>
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--gamero-muted)]">Living Sound Lab</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Gamero</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Gemero</h1>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
         <p className="relative mt-4 text-sm leading-7 text-[var(--gamero-muted)]">
-          Gamero is meant to feel like a creator gallery. Sign in to sync your library, publish music, and shape your own visual music space.
+          Gemero is meant to feel like a creator gallery. Sign in to sync your library, publish music, and shape your own visual music space.
         </p>
         {user ? (
           <Button onClick={() => navigate('/studio')} className="relative mt-5 w-full justify-center rounded-2xl">

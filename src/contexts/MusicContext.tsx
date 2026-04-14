@@ -366,10 +366,10 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) throw new Error('Continue with Google before uploading music.');
 
     const trackId = createId('track');
-    const ownerName = user.displayName || user.email.split('@')[0] || 'Gamero Creator';
+    const ownerName = user.displayName || user.email.split('@')[0] || 'Gemero Creator';
     const [audioUpload, imageUpload, derivedDuration] = await Promise.all([
-      uploadToCloudinary(audioFile, `gamero/tracks/${user.id}`),
-      uploadToCloudinary(imageFile, `gamero/covers/${user.id}`),
+      uploadToCloudinary(audioFile, `gemero/tracks/${user.id}`),
+      uploadToCloudinary(imageFile, `gemero/covers/${user.id}`),
       getAudioDuration(audioFile),
     ]);
 
@@ -408,7 +408,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: track.id || createId('studio'),
       source: 'studio',
       userId: user.id,
-      uploaderName: user.displayName || user.email.split('@')[0] || 'Gamero Studio',
+      uploaderName: user.displayName || user.email.split('@')[0] || 'Gemero Studio',
       createdAt: new Date().toISOString(),
     };
 
@@ -434,7 +434,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       coverArt: initialTrack?.albumArt || `https://picsum.photos/seed/${playlistId}/800/800`,
       trackIds: initialTrack ? [initialTrack.id] : [],
       userId: user.id,
-      ownerName: user.displayName || user.email.split('@')[0] || 'Gamero Listener',
+      ownerName: user.displayName || user.email.split('@')[0] || 'Gemero Listener',
       isPublic: true,
       followers: 0,
       createdAt: timestamp,
@@ -619,7 +619,7 @@ function getUserDisplayName(user: SupabaseAuthUser) {
       || user.user_metadata?.name
       || user.user_metadata?.user_name
       || user.email?.split('@')[0]
-      || 'Gamero listener',
+      || 'Gemero listener',
   );
 }
 
@@ -760,7 +760,7 @@ function mapPlaylistRow(playlistRow: PlaylistRow): Playlist {
     coverArt: playlistRow.cover_art || `https://picsum.photos/seed/${playlistRow.id}/800/800`,
     trackIds: asStringArray(playlistRow.track_ids),
     userId: playlistRow.user_id,
-    ownerName: playlistRow.owner_name || 'Gamero Listener',
+    ownerName: playlistRow.owner_name || 'Gemero Listener',
     isPublic: playlistRow.is_public !== false,
     followers: Number(playlistRow.followers || 0),
     createdAt: playlistRow.created_at || undefined,

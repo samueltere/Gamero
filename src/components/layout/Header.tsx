@@ -84,7 +84,7 @@ export const Header: React.FC = () => {
         <div className="min-w-0">
           <div className="mb-2 flex items-center gap-3 md:hidden">
             <AppLogo className="h-10 w-10 rounded-[18px] p-1" />
-            <span className="font-display text-lg font-semibold tracking-tight">Gamero</span>
+            <span className="font-display text-lg font-semibold tracking-tight">Gemero</span>
           </div>
           <p className="text-xs uppercase tracking-[0.32em] text-[var(--gamero-muted)]">{page.title}</p>
           <h2 className="truncate font-display text-xl font-semibold md:text-2xl">{page.subtitle}</h2>
@@ -168,7 +168,7 @@ export const Header: React.FC = () => {
         {user ? (
           <div className="flex items-center gap-3 rounded-full border border-[var(--gamero-border)] bg-white/8 p-1 pl-3">
             <div className="hidden text-right sm:block">
-              <p className="max-w-[160px] truncate text-sm font-medium">{user.displayName || 'Gamero listener'}</p>
+              <p className="max-w-[160px] truncate text-sm font-medium">{user.displayName || 'Gemero listener'}</p>
               <p className="max-w-[160px] truncate text-xs text-[var(--gamero-muted)]">{user.email}</p>
             </div>
             <div className="h-10 w-10 overflow-hidden rounded-full border border-[var(--gamero-border)] bg-white/10">

@@ -30,7 +30,7 @@ export const Home: React.FC = () => {
                   Creator-first ecosystem
                 </div>
                 <h1 className="mt-6 max-w-2xl font-display text-4xl font-semibold leading-tight md:text-6xl">
-                  Gamero turns listening into a living creative space.
+                  Gemero turns listening into a living creative space.
                 </h1>
                 <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--gamero-muted)] md:text-lg">
                   {user && topPersonalizedRow
@@ -71,7 +71,7 @@ export const Home: React.FC = () => {
                 <p className="text-xs uppercase tracking-[0.3em] text-[var(--gamero-muted)]">Creation orb</p>
                 <h2 className="mt-4 font-display text-3xl font-semibold">Music should look alive while it forms.</h2>
                 <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--gamero-muted)]">
-                  Gamero keeps a full listening experience, but the studio still feels magical, reactive, and built around creative energy.
+                  Gemero keeps a full listening experience, but the studio still feels magical, reactive, and built around creative energy.
                 </p>
                 <Button onClick={() => navigate('/studio')} className="mt-6 rounded-full px-6">
                   Generate a draft
@@ -137,7 +137,7 @@ export const Home: React.FC = () => {
         <section>
           <SectionHeader
             title="Made for you"
-            subtitle={user ? 'Taste-based rows that move with your listening, library, and followed artists.' : 'Start listening and saving tracks to unlock your own adaptive Gamero mix rooms.'}
+            subtitle={user ? 'Taste-based rows that move with your listening, library, and followed artists.' : 'Start listening and saving tracks to unlock your own adaptive Gemero mix rooms.'}
           />
           <div className="mt-5 space-y-8">
             {personalizedRows.map((row, index) => (

@@ -91,7 +91,7 @@ export function buildPersonalizedRows(
     rows.push({
       id: 'editor-picks',
       title: 'Editor Picks',
-      subtitle: 'A fallback mix until Gamero learns more from your taste.',
+      subtitle: 'A fallback mix until Gemero learns more from your taste.',
       tracks: allTracks.slice(0, 6),
     });
   }

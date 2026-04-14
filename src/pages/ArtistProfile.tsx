@@ -45,7 +45,7 @@ export const ArtistProfilePage: React.FC = () => {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/artist/${artist.id}`;
-    const result = await shareLink(artist.name, `Listen to ${artist.name} on Gamero`, url).catch(() => 'copied');
+    const result = await shareLink(artist.name, `Listen to ${artist.name} on Gemero`, url).catch(() => 'copied');
     toast.success(result === 'shared' ? 'Artist page shared.' : 'Artist link copied.');
   };
 
@@ -111,7 +111,7 @@ export const ArtistProfilePage: React.FC = () => {
               <h2 className="font-display text-3xl font-semibold">Latest release</h2>
               <p className="mt-3 text-sm leading-7 text-zinc-400">{artist.latestRelease}</p>
               <p className="mt-3 text-sm leading-7 text-zinc-500">
-                Follow this artist to keep new-release notifications flowing into your Gamero header.
+                Follow this artist to keep new-release notifications flowing into your Gemero header.
               </p>
               {topTrack && (
                 <div className="mt-6 overflow-hidden rounded-[28px] border border-white/8">

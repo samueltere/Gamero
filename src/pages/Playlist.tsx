@@ -34,7 +34,7 @@ export const PlaylistPage: React.FC = () => {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/playlist/${playlist.id}`;
-    const result = await shareLink(playlist.name, `Listen to ${playlist.name} on Gamero`, url).catch(() => 'copied');
+    const result = await shareLink(playlist.name, `Listen to ${playlist.name} on Gemero`, url).catch(() => 'copied');
     toast.success(result === 'shared' ? 'Playlist shared.' : 'Playlist link copied.');
   };
 
@@ -65,7 +65,7 @@ export const PlaylistPage: React.FC = () => {
           <Card className="rounded-[34px] p-6 md:p-8">
             <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Playlist</p>
             <h1 className="mt-4 font-display text-4xl font-semibold md:text-5xl">{playlist.name}</h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-400">{playlist.description || 'A playlist built in Gamero.'}</p>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-400">{playlist.description || 'A playlist built in Gemero.'}</p>
             <div className="mt-6 flex flex-wrap items-center gap-6 text-sm text-zinc-400">
               <span>{playlist.ownerName}</span>
               <span>{tracks.length} tracks</span>

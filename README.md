@@ -1,6 +1,6 @@
-# Gamero
+# Gemero
 
-Gamero is a music streaming and music-sharing web app built with a listener-first experience. Users can sign in with Google, explore artist profiles, listen to tracks, search by song or artist, save music to their library, create playlists, and upload their own songs with cover art from their device.
+Gemero is a music streaming and music-sharing web app built with a listener-first experience. Users can sign in with Google, explore artist profiles, listen to tracks, search by song or artist, save music to their library, create playlists, and upload their own songs with cover art from their device.
 
 ## What The App Does
 
@@ -15,7 +15,7 @@ Gamero is a music streaming and music-sharing web app built with a listener-firs
 
 ## How It Works
 
-Gamero uses Supabase Auth for Google sign-in, Supabase Postgres for app data, and Cloudinary for uploaded music files and cover images.
+Gemero uses Supabase Auth for Google sign-in, Supabase Postgres for app data, and Cloudinary for uploaded music files and cover images.
 
 Main app flow:
 
@@ -80,4 +80,4 @@ Main app flow:
 
 ## Summary
 
-Gamero is designed to feel like a Spotify-style music app with added support for community uploads and a simple creative studio experience. The main goal of the app is music listening first, with creation and uploads as extra features around that core experience.
+Gemero is designed to feel like a Spotify-style music app with added support for community uploads and a simple creative studio experience. The main goal of the app is music listening first, with creation and uploads as extra features around that core experience.

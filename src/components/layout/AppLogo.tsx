@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImage from '@/assets/images/Gamero Logo.jpg';
+import logoImage from '@/assets/images/Gemero Logo.jpg';
 import { cn } from '@/lib/utils';
 
 interface AppLogoProps {
@@ -17,7 +17,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({ className, imageClassName }) =
     >
       <img
         src={logoImage}
-        alt="Gamero logo"
+        alt="Gemero logo"
         className={cn('h-full w-full object-contain', imageClassName)}
       />
     </div>

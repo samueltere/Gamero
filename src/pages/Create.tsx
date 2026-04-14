@@ -90,7 +90,7 @@ export const Create: React.FC = () => {
         imageFile,
       });
 
-      toast.success('Your track is live on Gamero.');
+      toast.success('Your track is live on Gemero.');
       playTrack(newTrack);
       setUploadForm({
         title: '',
@@ -166,7 +166,7 @@ export const Create: React.FC = () => {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-[var(--gamero-muted)]">Creation lab</p>
-              <h1 className="mt-3 font-display text-4xl font-semibold">Upload original releases or shape a new sound inside Gamero&apos;s living studio.</h1>
+              <h1 className="mt-3 font-display text-4xl font-semibold">Upload original releases or shape a new sound inside Gemero&apos;s living studio.</h1>
               <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--gamero-muted)]">
                 The studio should feel magical, not like a boring form. Publish real songs from your device, or use the orb-inspired draft flow when you want to explore a fresh direction.
               </p>
@@ -302,7 +302,7 @@ export const Create: React.FC = () => {
                   <div>
                     <h2 className="font-display text-3xl font-semibold">Build a fast draft</h2>
                     <p className="mt-3 text-sm leading-7 text-zinc-400">
-                      Start from a mood, genre, or short idea. Gamero turns that into a playable draft with lyrics and a cover concept that feels alive.
+                      Start from a mood, genre, or short idea. Gemero turns that into a playable draft with lyrics and a cover concept that feels alive.
                     </p>
                   </div>
                   <Button variant="outline" className="rounded-full px-5" onClick={() => setCoverRefreshCount((current) => current + 1)}>
@@ -415,7 +415,7 @@ export const Create: React.FC = () => {
         <section>
           <div>
             <h2 className="font-display text-3xl font-semibold">Fresh community uploads</h2>
-            <p className="mt-2 text-sm text-zinc-400">New releases from the people publishing directly into Gamero.</p>
+            <p className="mt-2 text-sm text-zinc-400">New releases from the people publishing directly into Gemero.</p>
           </div>
           <Card className="mt-5 rounded-[32px] p-4">
             <div className="space-y-2">

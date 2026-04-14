@@ -57,7 +57,7 @@ export const PlaylistPicker: React.FC<PlaylistPickerProps> = ({ track, className
     try {
       await createPlaylist({
         name: playlistName,
-        description: `A Gamero playlist built from ${track.title}.`,
+        description: `A Gemero playlist built from ${track.title}.`,
         initialTrackId: track.id,
       });
       setPlaylistName('');

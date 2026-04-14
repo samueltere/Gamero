@@ -58,7 +58,7 @@ export const Player: React.FC = () => {
         : 'Artist release';
   const queueTitle = queue.length > 0 ? 'Your queue' : 'Up next';
   const queueSubtitle =
-    queue.length > 0 ? 'Tracks you added manually to play next.' : 'Gamero will keep playing from the current listening lane.';
+    queue.length > 0 ? 'Tracks you added manually to play next.' : 'Gemero will keep playing from the current listening lane.';
   const repeatLabel = repeatMode === 'off' ? 'Repeat off' : repeatMode === 'all' ? 'Repeat all' : 'Repeat one';
 
   return (

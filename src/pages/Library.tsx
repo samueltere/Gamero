@@ -43,7 +43,7 @@ export const Library: React.FC = () => {
     try {
       const playlist = await createPlaylist({
         name: playlistName,
-        description: 'A playlist created from your Gamero library.',
+        description: 'A playlist created from your Gemero library.',
       });
       setPlaylistName('');
       toast.success('Playlist created.');
@@ -239,7 +239,7 @@ export const Library: React.FC = () => {
                 </div>
               </Card>
             ) : (
-              <EmptyState title="Nothing played yet." description="Start a track from Home or Search and Gamero will keep your recent listening here." action={<Button onClick={() => navigate('/')}>Browse artists</Button>} />
+              <EmptyState title="Nothing played yet." description="Start a track from Home or Search and Gemero will keep your recent listening here." action={<Button onClick={() => navigate('/')}>Browse artists</Button>} />
             )}
           </TabsContent>
 
