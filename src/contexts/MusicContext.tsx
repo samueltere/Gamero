@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
+import { GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
 import { collection, deleteDoc, doc, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { toast } from 'sonner';
 import { CATALOG_TRACKS, FEATURED_ARTISTS, FRIEND_ACTIVITY } from '@/data/catalog';
 import { auth, db, handleFirestoreError, OperationType, storage } from '@/lib/firebase';
 import { buildNotifications, buildPersonalizedRows } from '@/lib/music-data';
@@ -9,6 +10,7 @@ import { buildAlbumSummaries } from '@/lib/utils';
 import type { AlbumSummary, ArtistProfile, FriendActivity, PersonalizedRow, Playlist, PlaylistInput, RepeatMode, SocialNotification, Track, UploadTrackInput } from '@/types/music';
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 interface MusicContextType {
   user: FirebaseUser | null;
@@ -194,7 +196,10 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setReadNotificationIds(nextPrefs.readNotificationIds);
         setPrefsReady(true);
       },
-      (error) => handleFirestoreError(error, OperationType.GET, `users/${user.uid}`),
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+        setPrefsReady(true);
+      },
     );
     return () => unsubscribe();
   }, [user]);
@@ -256,8 +261,26 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const unreadNotifications = notifications.filter((notification) => !notification.isRead).length;
 
   const signIn = async () => {
-    const result = await signInWithPopup(auth, googleProvider);
-    await ensureUserProfile(result.user);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      await ensureUserProfile(result.user);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      if (message.includes('auth/unauthorized-domain')) {
+        toast.error('This Render domain is not authorized in Firebase Authentication yet.');
+        return;
+      }
+
+      if (message.includes('auth/popup-blocked') || message.includes('auth/popup-closed-by-user')) {
+        toast.info('Popup sign-in was interrupted. Switching to redirect sign-in...');
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+
+      console.error(error);
+      toast.error('Google sign-in failed. Check Firebase authorized domains and try again.');
+    }
   };
   const logout = async () => signOut(auth);
 
