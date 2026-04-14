@@ -1,6 +1,13 @@
 export type TrackSource = 'catalog' | 'community' | 'studio';
 export type RepeatMode = 'off' | 'all' | 'one';
 
+export interface AppUser {
+  id: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+}
+
 export interface Track {
   id: string;
   title: string;

@@ -14,7 +14,7 @@ export const PlaylistPage: React.FC = () => {
 
   const playlist = playlists.find((entry) => entry.id === playlistId);
   const tracks = playlist ? getPlaylistTracks(playlist.id) : [];
-  const isOwner = playlist?.userId === user?.uid;
+  const isOwner = playlist?.userId === user?.id;
 
   if (!playlist) {
     return (

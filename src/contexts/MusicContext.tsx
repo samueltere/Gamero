@@ -1,19 +1,27 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { GoogleAuthProvider, User as FirebaseUser, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
-import { collection, deleteDoc, doc, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import type { User as SupabaseAuthUser } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { CATALOG_TRACKS, FEATURED_ARTISTS, FRIEND_ACTIVITY } from '@/data/catalog';
-import { auth, db, handleFirestoreError, OperationType, storage } from '@/lib/firebase';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 import { buildNotifications, buildPersonalizedRows } from '@/lib/music-data';
+import { supabase, handleDataError, isSupabaseConfigured, OperationType } from '@/lib/supabase';
 import { buildAlbumSummaries } from '@/lib/utils';
-import type { AlbumSummary, ArtistProfile, FriendActivity, PersonalizedRow, Playlist, PlaylistInput, RepeatMode, SocialNotification, Track, UploadTrackInput } from '@/types/music';
-
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+import type {
+  AlbumSummary,
+  AppUser,
+  ArtistProfile,
+  FriendActivity,
+  PersonalizedRow,
+  Playlist,
+  PlaylistInput,
+  RepeatMode,
+  SocialNotification,
+  Track,
+  UploadTrackInput,
+} from '@/types/music';
 
 interface MusicContextType {
-  user: FirebaseUser | null;
+  user: AppUser | null;
   isAuthReady: boolean;
   currentTrack: Track | null;
   isPlaying: boolean;
@@ -72,10 +80,56 @@ interface MusicContextType {
   getAlbumById: (albumId: string) => AlbumSummary | undefined;
 }
 
+interface UserPreferencesRow {
+  id: string;
+  email: string;
+  display_name: string;
+  photo_url: string;
+  saved_track_ids: string[] | null;
+  recent_track_ids: string[] | null;
+  followed_artist_ids: string[] | null;
+  read_notification_ids: string[] | null;
+  updated_at?: string | null;
+}
+
+interface TrackRow {
+  id: string;
+  title: string;
+  artist: string;
+  artist_id: string | null;
+  album: string | null;
+  album_art: string;
+  url: string;
+  duration: number | null;
+  genre: string | null;
+  mood: string | null;
+  lyrics: string | null;
+  source: string | null;
+  user_id: string | null;
+  uploader_name: string | null;
+  description: string | null;
+  plays: number | null;
+  created_at: string | null;
+}
+
+interface PlaylistRow {
+  id: string;
+  name: string;
+  description: string | null;
+  cover_art: string | null;
+  track_ids: string[] | null;
+  user_id: string;
+  owner_name: string | null;
+  is_public: boolean | null;
+  followers: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
 
 export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [prefsReady, setPrefsReady] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -95,9 +149,16 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const prefsSignatureRef = useRef('');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
+    void loadTracks();
+    void loadPlaylists();
+  }, []);
+
+  useEffect(() => {
+    const applyAuthUser = async (nextAuthUser: SupabaseAuthUser | null) => {
+      const nextUser = mapSupabaseUser(nextAuthUser);
       setUser(nextUser);
       setIsAuthReady(true);
+
       if (!nextUser) {
         setSavedTrackIds([]);
         setRecentTrackIds([]);
@@ -107,127 +168,42 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         prefsSignatureRef.current = '';
         return;
       }
+
       await ensureUserProfile(nextUser);
+      await loadUserPreferences(nextUser.id);
+    };
+
+    void supabase.auth.getUser().then(({ data, error }) => {
+      if (error) {
+        handleDataError(error, OperationType.GET, 'auth/user', { throwError: false });
+      }
+      return applyAuthUser(data.user ?? null);
     });
-    return () => unsubscribe();
-  }, []);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'tracks'), orderBy('createdAt', 'desc'), limit(120)),
-      (snapshot) => {
-        setRemoteTracks(
-          snapshot.docs.map((trackDoc) => {
-            const data = trackDoc.data();
-            return {
-              id: trackDoc.id,
-              title: data.title ?? 'Untitled Track',
-              artist: data.artist ?? 'Unknown Artist',
-              artistId: data.artistId,
-              album: data.album,
-              albumArt: data.albumArt ?? 'https://picsum.photos/seed/gamero-fallback/800/800',
-              url: data.url ?? '',
-              duration: Number(data.duration ?? 0),
-              genre: data.genre,
-              mood: data.mood,
-              lyrics: data.lyrics,
-              source: normalizeTrackSource(data.source),
-              userId: data.userId,
-              uploaderName: data.uploaderName,
-              description: data.description,
-              plays: data.plays,
-              createdAt: data.createdAt,
-            } as Track;
-          }),
-        );
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'tracks', { throwError: false }),
-    );
-    return () => unsubscribe();
-  }, []);
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      void applyAuthUser(session?.user ?? null);
+    });
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'playlists'), orderBy('updatedAt', 'desc'), limit(80)),
-      (snapshot) => {
-        setRemotePlaylists(
-          snapshot.docs.map((playlistDoc) => {
-            const data = playlistDoc.data();
-            return {
-              id: playlistDoc.id,
-              name: data.name ?? 'Untitled Playlist',
-              description: data.description ?? '',
-              coverArt: data.coverArt ?? `https://picsum.photos/seed/${playlistDoc.id}/800/800`,
-              trackIds: Array.isArray(data.trackIds) ? data.trackIds.filter((trackId: unknown) => typeof trackId === 'string') : [],
-              userId: data.userId ?? '',
-              ownerName: data.ownerName ?? 'Gamero Listener',
-              isPublic: data.isPublic !== false,
-              followers: Number(data.followers ?? 0),
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-            } as Playlist;
-          }),
-        );
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'playlists', { throwError: false }),
-    );
-    return () => unsubscribe();
+    return () => authListener.subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    const unsubscribe = onSnapshot(
-      doc(db, 'users', user.uid),
-      (snapshot) => {
-        const data = snapshot.data() || {};
-        const nextPrefs = {
-          savedTrackIds: asStringArray(data.savedTrackIds),
-          recentTrackIds: asStringArray(data.recentTrackIds),
-          followedArtistIds: asStringArray(data.followedArtistIds),
-          readNotificationIds: asStringArray(data.readNotificationIds),
-        };
-        const signature = JSON.stringify(nextPrefs);
-        prefsSignatureRef.current = signature;
-        setSavedTrackIds(nextPrefs.savedTrackIds);
-        setRecentTrackIds(nextPrefs.recentTrackIds);
-        setFollowedArtistIds(nextPrefs.followedArtistIds);
-        setReadNotificationIds(nextPrefs.readNotificationIds);
-        setPrefsReady(true);
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.GET, `users/${user.uid}`, { throwError: false });
-        setPrefsReady(true);
-      },
-    );
-    return () => unsubscribe();
-  }, [user]);
 
   useEffect(() => {
     if (!user || !prefsReady) {
       return;
     }
+
     const signature = JSON.stringify({ savedTrackIds, recentTrackIds, followedArtistIds, readNotificationIds });
     if (signature === prefsSignatureRef.current) {
       return;
     }
+
     prefsSignatureRef.current = signature;
-    setDoc(
-      doc(db, 'users', user.uid),
-      {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || '',
-        photoURL: user.photoURL || '',
-        savedTrackIds,
-        recentTrackIds,
-        followedArtistIds,
-        readNotificationIds,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    ).catch((error) => handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`, { throwError: false }));
+    void upsertUserPreferences(user, {
+      saved_track_ids: savedTrackIds,
+      recent_track_ids: recentTrackIds,
+      followed_artist_ids: followedArtistIds,
+      read_notification_ids: readNotificationIds,
+    }).catch((error) => handleDataError(error, OperationType.UPDATE, `users/${user.id}`, { throwError: false }));
   }, [user, prefsReady, savedTrackIds, recentTrackIds, followedArtistIds, readNotificationIds]);
 
   useEffect(() => {
@@ -259,40 +235,47 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const allTracks = useMemo(() => mergeTracks(remoteTracks, CATALOG_TRACKS), [remoteTracks]);
   const activeQueue = useMemo(() => (queue.length > 0 ? queue : allTracks), [queue, allTracks]);
   const communityTracks = useMemo(() => remoteTracks.filter((track) => track.source === 'community'), [remoteTracks]);
-  const playlists = useMemo(() => remotePlaylists.filter((playlist) => playlist.isPublic || playlist.userId === user?.uid), [remotePlaylists, user]);
-  const userPlaylists = useMemo(() => (user ? playlists.filter((playlist) => playlist.userId === user.uid) : []), [playlists, user]);
+  const playlists = useMemo(() => remotePlaylists.filter((playlist) => playlist.isPublic || playlist.userId === user?.id), [remotePlaylists, user]);
+  const userPlaylists = useMemo(() => (user ? playlists.filter((playlist) => playlist.userId === user.id) : []), [playlists, user]);
   const albums = useMemo(() => buildAlbumSummaries(allTracks), [allTracks]);
   const savedTracks = useMemo(() => mapIdsToTracks(savedTrackIds, allTracks), [savedTrackIds, allTracks]);
   const recentTracks = useMemo(() => mapIdsToTracks(recentTrackIds, allTracks), [recentTrackIds, allTracks]);
-  const userUploads = useMemo(() => (user ? remoteTracks.filter((track) => track.userId === user.uid && track.source === 'community') : []), [remoteTracks, user]);
-  const userStudioTracks = useMemo(() => (user ? remoteTracks.filter((track) => track.userId === user.uid && track.source === 'studio') : []), [remoteTracks, user]);
+  const userUploads = useMemo(() => (user ? remoteTracks.filter((track) => track.userId === user.id && track.source === 'community') : []), [remoteTracks, user]);
+  const userStudioTracks = useMemo(() => (user ? remoteTracks.filter((track) => track.userId === user.id && track.source === 'studio') : []), [remoteTracks, user]);
   const personalizedRows = useMemo(() => buildPersonalizedRows(allTracks, savedTracks, recentTracks, followedArtistIds), [allTracks, savedTracks, recentTracks, followedArtistIds]);
   const notifications = useMemo(() => buildNotifications({ communityTracks, followedArtistIds, playlists, readNotificationIds, userPlaylists }), [communityTracks, followedArtistIds, playlists, readNotificationIds, userPlaylists]);
   const unreadNotifications = notifications.filter((notification) => !notification.isRead).length;
 
   const signIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      await ensureUserProfile(result.user);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+    if (!isSupabaseConfigured()) {
+      toast.error('Supabase environment variables are missing.');
+      return;
+    }
 
-      if (message.includes('auth/unauthorized-domain')) {
-        toast.error('This Render domain is not authorized in Firebase Authentication yet.');
-        return;
-      }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
 
-      if (message.includes('auth/popup-blocked') || message.includes('auth/popup-closed-by-user')) {
-        toast.info('Popup sign-in was interrupted. Switching to redirect sign-in...');
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-
-      console.error(error);
-      toast.error('Google sign-in failed. Check Firebase authorized domains and try again.');
+    if (error) {
+      handleDataError(error, OperationType.GET, 'auth/google', { throwError: false });
+      toast.error('Google sign-in failed. Check your Supabase auth settings and try again.');
     }
   };
-  const logout = async () => signOut(auth);
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      handleDataError(error, OperationType.DELETE, 'auth/session', { throwError: false });
+      toast.error('Sign-out failed. Try again.');
+    }
+  };
 
   const playTrack = (track: Track) => {
     if (!track.url) return;
@@ -381,67 +364,143 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const uploadTrack = async ({ title, genre, description, audioFile, imageFile }: UploadTrackInput) => {
     if (!user) throw new Error('Continue with Google before uploading music.');
+
     const trackId = createId('track');
-    const ownerName = user.displayName?.trim() || user.email?.split('@')[0] || 'Gamero Creator';
-    const audioRefPath = ref(storage, `tracks/${user.uid}/${trackId}.${getFileExtension(audioFile.name, 'mp3')}`);
-    const imageRefPath = ref(storage, `covers/${user.uid}/${trackId}.${getFileExtension(imageFile.name, 'jpg')}`);
-    const [audioSnapshot, imageSnapshot, duration] = await Promise.all([uploadBytes(audioRefPath, audioFile), uploadBytes(imageRefPath, imageFile), getAudioDuration(audioFile)]);
-    const [audioUrl, imageUrl] = await Promise.all([getDownloadURL(audioSnapshot.ref), getDownloadURL(imageSnapshot.ref)]);
+    const ownerName = user.displayName || user.email.split('@')[0] || 'Gamero Creator';
+    const [audioUpload, imageUpload, derivedDuration] = await Promise.all([
+      uploadToCloudinary(audioFile, `gamero/tracks/${user.id}`),
+      uploadToCloudinary(imageFile, `gamero/covers/${user.id}`),
+      getAudioDuration(audioFile),
+    ]);
+
     const uploadedTrack: Track = {
       id: trackId,
       title: title.trim(),
       artist: ownerName,
       album: 'Community Uploads',
-      albumArt: imageUrl,
-      url: audioUrl,
-      duration,
+      albumArt: imageUpload.secureUrl,
+      url: audioUpload.secureUrl,
+      duration: audioUpload.duration || derivedDuration,
       genre,
       description: description.trim(),
       source: 'community',
-      userId: user.uid,
+      userId: user.id,
       uploaderName: ownerName,
-      createdAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
       plays: 0,
     };
-    await setDoc(doc(db, 'tracks', trackId), uploadedTrack).catch((error) => handleFirestoreError(error, OperationType.WRITE, `tracks/${trackId}`));
+
+    const trackRow = trackToRow(uploadedTrack);
+    const { error } = await supabase.from('tracks').insert(trackRow);
+    if (error) {
+      handleDataError(error, OperationType.WRITE, `tracks/${trackId}`);
+    }
+
+    setRemoteTracks((current) => mergeTracks([uploadedTrack], current));
     return uploadedTrack;
   };
 
   const saveStudioTrack = async (track: Track) => {
     if (!user) throw new Error('Continue with Google before saving a studio draft.');
-    const studioTrack: Track = { ...track, id: track.id || createId('studio'), source: 'studio', userId: user.uid, uploaderName: user.displayName || user.email?.split('@')[0] || 'Gamero Studio', createdAt: serverTimestamp() };
-    await setDoc(doc(db, 'tracks', studioTrack.id), studioTrack).catch((error) => handleFirestoreError(error, OperationType.WRITE, `tracks/${studioTrack.id}`));
+
+    const studioTrack: Track = {
+      ...track,
+      id: track.id || createId('studio'),
+      source: 'studio',
+      userId: user.id,
+      uploaderName: user.displayName || user.email.split('@')[0] || 'Gamero Studio',
+      createdAt: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from('tracks').upsert(trackToRow(studioTrack));
+    if (error) {
+      handleDataError(error, OperationType.WRITE, `tracks/${studioTrack.id}`);
+    }
+
+    setRemoteTracks((current) => mergeTracks([studioTrack], current.filter((entry) => entry.id !== studioTrack.id)));
     return studioTrack;
   };
 
   const createPlaylist = async ({ name, description, initialTrackId }: PlaylistInput) => {
     if (!user) throw new Error('Continue with Google before creating a playlist.');
+
     const playlistId = createId('playlist');
     const initialTrack = initialTrackId ? allTracks.find((track) => track.id === initialTrackId) : undefined;
-    const playlist: Playlist = { id: playlistId, name: name.trim(), description: description.trim(), coverArt: initialTrack?.albumArt || `https://picsum.photos/seed/${playlistId}/800/800`, trackIds: initialTrack ? [initialTrack.id] : [], userId: user.uid, ownerName: user.displayName || user.email?.split('@')[0] || 'Gamero Listener', isPublic: true, followers: 0, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-    await setDoc(doc(db, 'playlists', playlistId), playlist).catch((error) => handleFirestoreError(error, OperationType.WRITE, `playlists/${playlistId}`));
+    const timestamp = new Date().toISOString();
+    const playlist: Playlist = {
+      id: playlistId,
+      name: name.trim(),
+      description: description.trim(),
+      coverArt: initialTrack?.albumArt || `https://picsum.photos/seed/${playlistId}/800/800`,
+      trackIds: initialTrack ? [initialTrack.id] : [],
+      userId: user.id,
+      ownerName: user.displayName || user.email.split('@')[0] || 'Gamero Listener',
+      isPublic: true,
+      followers: 0,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    const { error } = await supabase.from('playlists').insert(playlistToRow(playlist));
+    if (error) {
+      handleDataError(error, OperationType.WRITE, `playlists/${playlistId}`);
+    }
+
+    setRemotePlaylists((current) => [playlist, ...current.filter((entry) => entry.id !== playlist.id)]);
     return playlist;
   };
 
   const deletePlaylist = async (playlistId: string) => {
     const playlist = playlists.find((entry) => entry.id === playlistId);
-    if (!playlist || playlist.userId !== user?.uid) throw new Error('You can only delete your own playlists.');
-    await deleteDoc(doc(db, 'playlists', playlistId)).catch((error) => handleFirestoreError(error, OperationType.DELETE, `playlists/${playlistId}`));
+    if (!playlist || playlist.userId !== user?.id) throw new Error('You can only delete your own playlists.');
+
+    const { error } = await supabase.from('playlists').delete().eq('id', playlistId);
+    if (error) {
+      handleDataError(error, OperationType.DELETE, `playlists/${playlistId}`);
+    }
+
+    setRemotePlaylists((current) => current.filter((entry) => entry.id !== playlistId));
   };
 
   const addTrackToPlaylist = async (playlistId: string, trackId: string) => {
     const playlist = playlists.find((entry) => entry.id === playlistId);
     const track = allTracks.find((entry) => entry.id === trackId);
-    if (!playlist || !track || playlist.userId !== user?.uid || playlist.trackIds.includes(trackId)) return;
-    await updateDoc(doc(db, 'playlists', playlistId), { trackIds: [...playlist.trackIds, trackId], coverArt: playlist.trackIds.length === 0 ? track.albumArt : playlist.coverArt, updatedAt: serverTimestamp() }).catch((error) => handleFirestoreError(error, OperationType.UPDATE, `playlists/${playlistId}`));
+    if (!playlist || !track || playlist.userId !== user?.id || playlist.trackIds.includes(trackId)) return;
+
+    const nextPlaylist: Playlist = {
+      ...playlist,
+      trackIds: [...playlist.trackIds, trackId],
+      coverArt: playlist.trackIds.length === 0 ? track.albumArt : playlist.coverArt,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from('playlists').update(playlistToRow(nextPlaylist)).eq('id', playlistId);
+    if (error) {
+      handleDataError(error, OperationType.UPDATE, `playlists/${playlistId}`);
+    }
+
+    setRemotePlaylists((current) => current.map((entry) => (entry.id === playlistId ? nextPlaylist : entry)));
   };
 
   const removeTrackFromPlaylist = async (playlistId: string, trackId: string) => {
     const playlist = playlists.find((entry) => entry.id === playlistId);
-    if (!playlist || playlist.userId !== user?.uid) return;
+    if (!playlist || playlist.userId !== user?.id) return;
+
     const nextTrackIds = playlist.trackIds.filter((id) => id !== trackId);
     const nextTrack = nextTrackIds.map((id) => allTracks.find((track) => track.id === id)).find(Boolean);
-    await updateDoc(doc(db, 'playlists', playlistId), { trackIds: nextTrackIds, coverArt: nextTrack?.albumArt || `https://picsum.photos/seed/${playlistId}/800/800`, updatedAt: serverTimestamp() }).catch((error) => handleFirestoreError(error, OperationType.UPDATE, `playlists/${playlistId}`));
+    const nextPlaylist: Playlist = {
+      ...playlist,
+      trackIds: nextTrackIds,
+      coverArt: nextTrack?.albumArt || `https://picsum.photos/seed/${playlistId}/800/800`,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from('playlists').update(playlistToRow(nextPlaylist)).eq('id', playlistId);
+    if (error) {
+      handleDataError(error, OperationType.UPDATE, `playlists/${playlistId}`);
+    }
+
+    setRemotePlaylists((current) => current.map((entry) => (entry.id === playlistId ? nextPlaylist : entry)));
   };
 
   const playlistHasTrack = (playlistId: string, trackId: string) => playlists.some((playlist) => playlist.id === playlistId && playlist.trackIds.includes(trackId));
@@ -463,12 +522,141 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </MusicContext.Provider>
   );
+
+  async function loadTracks() {
+    if (!isSupabaseConfigured()) {
+      setRemoteTracks([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(120);
+
+    if (error) {
+      handleDataError(error, OperationType.LIST, 'tracks', { throwError: false });
+      return;
+    }
+
+    setRemoteTracks((data || []).map(mapTrackRow));
+  }
+
+  async function loadPlaylists() {
+    if (!isSupabaseConfigured()) {
+      setRemotePlaylists([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('playlists')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(80);
+
+    if (error) {
+      handleDataError(error, OperationType.LIST, 'playlists', { throwError: false });
+      return;
+    }
+
+    setRemotePlaylists((data || []).map(mapPlaylistRow));
+  }
+
+  async function loadUserPreferences(userId: string) {
+    if (!isSupabaseConfigured()) {
+      setPrefsReady(true);
+      return;
+    }
+
+    const { data, error } = await supabase.from('users').select('*').eq('id', userId).maybeSingle<UserPreferencesRow>();
+
+    if (error) {
+      handleDataError(error, OperationType.GET, `users/${userId}`, { throwError: false });
+      setPrefsReady(true);
+      return;
+    }
+
+    const nextPrefs = {
+      followedArtistIds: asStringArray(data?.followed_artist_ids),
+      readNotificationIds: asStringArray(data?.read_notification_ids),
+      recentTrackIds: asStringArray(data?.recent_track_ids),
+      savedTrackIds: asStringArray(data?.saved_track_ids),
+    };
+
+    const signature = JSON.stringify(nextPrefs);
+    prefsSignatureRef.current = signature;
+    setSavedTrackIds(nextPrefs.savedTrackIds);
+    setRecentTrackIds(nextPrefs.recentTrackIds);
+    setFollowedArtistIds(nextPrefs.followedArtistIds);
+    setReadNotificationIds(nextPrefs.readNotificationIds);
+    setPrefsReady(true);
+  }
 };
 
 export function useMusic() {
   const context = useContext(MusicContext);
   if (!context) throw new Error('useMusic must be used within a MusicProvider');
   return context;
+}
+
+function mapSupabaseUser(nextUser: SupabaseAuthUser | null): AppUser | null {
+  if (!nextUser) {
+    return null;
+  }
+
+  return {
+    id: nextUser.id,
+    email: nextUser.email || '',
+    displayName: getUserDisplayName(nextUser),
+    photoURL: String(nextUser.user_metadata?.avatar_url || nextUser.user_metadata?.picture || ''),
+  };
+}
+
+function getUserDisplayName(user: SupabaseAuthUser) {
+  return String(
+    user.user_metadata?.full_name
+      || user.user_metadata?.name
+      || user.user_metadata?.user_name
+      || user.email?.split('@')[0]
+      || 'Gamero listener',
+  );
+}
+
+async function ensureUserProfile(nextUser: AppUser) {
+  await upsertUserPreferences(nextUser, {
+    followed_artist_ids: [],
+    read_notification_ids: [],
+    recent_track_ids: [],
+    saved_track_ids: [],
+  });
+}
+
+async function upsertUserPreferences(
+  nextUser: AppUser,
+  preferences: {
+    followed_artist_ids: string[];
+    read_notification_ids: string[];
+    recent_track_ids: string[];
+    saved_track_ids: string[];
+  },
+) {
+  const payload: UserPreferencesRow = {
+    id: nextUser.id,
+    email: nextUser.email,
+    display_name: nextUser.displayName,
+    photo_url: nextUser.photoURL,
+    followed_artist_ids: preferences.followed_artist_ids,
+    read_notification_ids: preferences.read_notification_ids,
+    recent_track_ids: preferences.recent_track_ids,
+    saved_track_ids: preferences.saved_track_ids,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase.from('users').upsert(payload, { onConflict: 'id' });
+  if (error) {
+    handleDataError(error, OperationType.WRITE, `users/${nextUser.id}`);
+  }
 }
 
 function normalizeTrackSource(value: unknown): Track['source'] {
@@ -495,21 +683,12 @@ function rememberTrack(trackId: string, update: React.Dispatch<React.SetStateAct
   update((current) => [trackId, ...current.filter((id) => id !== trackId)].slice(0, 40));
 }
 
-async function ensureUserProfile(nextUser: FirebaseUser) {
-  await setDoc(doc(db, 'users', nextUser.uid), { uid: nextUser.uid, email: nextUser.email || '', displayName: nextUser.displayName || '', photoURL: nextUser.photoURL || '', savedTrackIds: [], recentTrackIds: [], followedArtistIds: [], readNotificationIds: [], updatedAt: serverTimestamp() }, { merge: true });
-}
-
 function asStringArray(value: unknown) {
   return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
 }
 
 function createId(prefix: string) {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? `${prefix}-${crypto.randomUUID()}` : `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function getFileExtension(fileName: string, fallback: string) {
-  const extension = fileName.split('.').pop();
-  return extension && extension !== fileName ? extension.toLowerCase() : fallback;
 }
 
 function getAudioDuration(file: File) {
@@ -527,4 +706,80 @@ function getAudioDuration(file: File) {
       URL.revokeObjectURL(objectUrl);
     };
   });
+}
+
+function mapTrackRow(trackRow: TrackRow): Track {
+  return {
+    id: trackRow.id,
+    title: trackRow.title || 'Untitled Track',
+    artist: trackRow.artist || 'Unknown Artist',
+    artistId: trackRow.artist_id || undefined,
+    album: trackRow.album || undefined,
+    albumArt: trackRow.album_art || 'https://picsum.photos/seed/gamero-fallback/800/800',
+    url: trackRow.url || '',
+    duration: Number(trackRow.duration || 0),
+    genre: trackRow.genre || undefined,
+    mood: trackRow.mood || undefined,
+    lyrics: trackRow.lyrics || undefined,
+    source: normalizeTrackSource(trackRow.source),
+    userId: trackRow.user_id || undefined,
+    uploaderName: trackRow.uploader_name || undefined,
+    description: trackRow.description || undefined,
+    plays: Number(trackRow.plays || 0),
+    createdAt: trackRow.created_at || undefined,
+  };
+}
+
+function trackToRow(track: Track): TrackRow {
+  return {
+    id: track.id,
+    title: track.title,
+    artist: track.artist,
+    artist_id: track.artistId || null,
+    album: track.album || null,
+    album_art: track.albumArt,
+    url: track.url,
+    duration: track.duration,
+    genre: track.genre || null,
+    mood: track.mood || null,
+    lyrics: track.lyrics || null,
+    source: track.source,
+    user_id: track.userId || null,
+    uploader_name: track.uploaderName || null,
+    description: track.description || null,
+    plays: track.plays || 0,
+    created_at: typeof track.createdAt === 'string' ? track.createdAt : new Date().toISOString(),
+  };
+}
+
+function mapPlaylistRow(playlistRow: PlaylistRow): Playlist {
+  return {
+    id: playlistRow.id,
+    name: playlistRow.name || 'Untitled Playlist',
+    description: playlistRow.description || '',
+    coverArt: playlistRow.cover_art || `https://picsum.photos/seed/${playlistRow.id}/800/800`,
+    trackIds: asStringArray(playlistRow.track_ids),
+    userId: playlistRow.user_id,
+    ownerName: playlistRow.owner_name || 'Gamero Listener',
+    isPublic: playlistRow.is_public !== false,
+    followers: Number(playlistRow.followers || 0),
+    createdAt: playlistRow.created_at || undefined,
+    updatedAt: playlistRow.updated_at || undefined,
+  };
+}
+
+function playlistToRow(playlist: Playlist): PlaylistRow {
+  return {
+    id: playlist.id,
+    name: playlist.name,
+    description: playlist.description,
+    cover_art: playlist.coverArt,
+    track_ids: playlist.trackIds,
+    user_id: playlist.userId,
+    owner_name: playlist.ownerName,
+    is_public: playlist.isPublic,
+    followers: playlist.followers,
+    created_at: typeof playlist.createdAt === 'string' ? playlist.createdAt : new Date().toISOString(),
+    updated_at: typeof playlist.updatedAt === 'string' ? playlist.updatedAt : new Date().toISOString(),
+  };
 }
