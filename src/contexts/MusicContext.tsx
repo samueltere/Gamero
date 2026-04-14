@@ -141,7 +141,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }),
         );
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'tracks'),
+      (error) => handleFirestoreError(error, OperationType.LIST, 'tracks', { throwError: false }),
     );
     return () => unsubscribe();
   }, []);
@@ -169,7 +169,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }),
         );
       },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'playlists'),
+      (error) => handleFirestoreError(error, OperationType.LIST, 'playlists', { throwError: false }),
     );
     return () => unsubscribe();
   }, []);
@@ -197,7 +197,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setPrefsReady(true);
       },
       (error) => {
-        handleFirestoreError(error, OperationType.GET, `users/${user.uid}`);
+        handleFirestoreError(error, OperationType.GET, `users/${user.uid}`, { throwError: false });
         setPrefsReady(true);
       },
     );
@@ -215,9 +215,19 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     prefsSignatureRef.current = signature;
     setDoc(
       doc(db, 'users', user.uid),
-      { savedTrackIds, recentTrackIds, followedArtistIds, readNotificationIds, updatedAt: serverTimestamp() },
+      {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        savedTrackIds,
+        recentTrackIds,
+        followedArtistIds,
+        readNotificationIds,
+        updatedAt: serverTimestamp(),
+      },
       { merge: true },
-    ).catch((error) => handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`));
+    ).catch((error) => handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`, { throwError: false }));
   }, [user, prefsReady, savedTrackIds, recentTrackIds, followedArtistIds, readNotificationIds]);
 
   useEffect(() => {
@@ -369,14 +379,30 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
   const isSavedTrack = (trackId: string) => savedTrackIds.includes(trackId);
 
-  const uploadTrack = async ({ title, artist, genre, description, audioFile, imageFile }: UploadTrackInput) => {
+  const uploadTrack = async ({ title, genre, description, audioFile, imageFile }: UploadTrackInput) => {
     if (!user) throw new Error('Continue with Google before uploading music.');
     const trackId = createId('track');
+    const ownerName = user.displayName?.trim() || user.email?.split('@')[0] || 'Gamero Creator';
     const audioRefPath = ref(storage, `tracks/${user.uid}/${trackId}.${getFileExtension(audioFile.name, 'mp3')}`);
     const imageRefPath = ref(storage, `covers/${user.uid}/${trackId}.${getFileExtension(imageFile.name, 'jpg')}`);
     const [audioSnapshot, imageSnapshot, duration] = await Promise.all([uploadBytes(audioRefPath, audioFile), uploadBytes(imageRefPath, imageFile), getAudioDuration(audioFile)]);
     const [audioUrl, imageUrl] = await Promise.all([getDownloadURL(audioSnapshot.ref), getDownloadURL(imageSnapshot.ref)]);
-    const uploadedTrack: Track = { id: trackId, title: title.trim(), artist: artist.trim(), album: 'Community Uploads', albumArt: imageUrl, url: audioUrl, duration, genre, description: description.trim(), source: 'community', userId: user.uid, uploaderName: user.displayName || user.email?.split('@')[0] || 'Gamero Creator', createdAt: serverTimestamp(), plays: 0 };
+    const uploadedTrack: Track = {
+      id: trackId,
+      title: title.trim(),
+      artist: ownerName,
+      album: 'Community Uploads',
+      albumArt: imageUrl,
+      url: audioUrl,
+      duration,
+      genre,
+      description: description.trim(),
+      source: 'community',
+      userId: user.uid,
+      uploaderName: ownerName,
+      createdAt: serverTimestamp(),
+      plays: 0,
+    };
     await setDoc(doc(db, 'tracks', trackId), uploadedTrack).catch((error) => handleFirestoreError(error, OperationType.WRITE, `tracks/${trackId}`));
     return uploadedTrack;
   };

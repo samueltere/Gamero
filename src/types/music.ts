@@ -92,7 +92,6 @@ export interface FriendActivity {
 
 export interface UploadTrackInput {
   title: string;
-  artist: string;
   genre: string;
   description: string;
   audioFile: File;

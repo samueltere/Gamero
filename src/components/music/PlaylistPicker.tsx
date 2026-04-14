@@ -93,7 +93,7 @@ export const PlaylistPicker: React.FC<PlaylistPickerProps> = ({ track, className
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 top-12 z-30 w-72 rounded-[24px] border border-white/10 bg-gamero-panel p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+        <div className="absolute right-0 top-12 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-white/10 bg-gamero-panel p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-white">Add to playlist</p>
@@ -117,7 +117,7 @@ export const PlaylistPicker: React.FC<PlaylistPickerProps> = ({ track, className
                   >
                     <img src={playlist.coverArt} alt={playlist.name} className="h-12 w-12 rounded-2xl object-cover" referrerPolicy="no-referrer" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-white">{playlist.name}</p>
+                      <p className="line-clamp-2 break-words text-sm font-medium text-white">{playlist.name}</p>
                       <p className="truncate text-xs text-zinc-500">{playlist.trackIds.length} tracks</p>
                     </div>
                     {hasTrack && <Check className="h-4 w-4 text-gamero-lime" />}

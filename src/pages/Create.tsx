@@ -58,13 +58,14 @@ export const Create: React.FC = () => {
     mood: studioMood,
     prompt: `${studioPrompt} ${coverRefreshCount}`,
   });
-  const isUploadReady = Boolean(uploadForm.title.trim() && uploadForm.artist.trim() && audioFile && imageFile);
+  const ownerName = user?.displayName?.trim() || user?.email?.split('@')[0] || 'Your account';
+  const isUploadReady = Boolean(uploadForm.title.trim() && audioFile && imageFile && user);
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!uploadForm.title.trim() || !uploadForm.artist.trim()) {
-      toast.error('Add both a track title and artist name before publishing.');
+    if (!uploadForm.title.trim()) {
+      toast.error('Add a track title before publishing.');
       return;
     }
 
@@ -82,7 +83,9 @@ export const Create: React.FC = () => {
 
     try {
       const newTrack = await uploadTrack({
-        ...uploadForm,
+        title: uploadForm.title,
+        genre: uploadForm.genre,
+        description: uploadForm.description,
         audioFile,
         imageFile,
       });
@@ -91,7 +94,6 @@ export const Create: React.FC = () => {
       playTrack(newTrack);
       setUploadForm({
         title: '',
-        artist: '',
         genre: 'Afrobeats',
         description: '',
       });
@@ -206,20 +208,18 @@ export const Create: React.FC = () => {
                       onChange={(event) => setUploadForm((current) => ({ ...current, title: event.target.value }))}
                       placeholder="Track title"
                     />
-                    <Input
-                      value={uploadForm.artist}
-                      onChange={(event) => setUploadForm((current) => ({ ...current, artist: event.target.value }))}
-                      placeholder="Artist name"
-                    />
+                    <div className="flex h-12 items-center rounded-2xl border border-[var(--gamero-border)] bg-white/8 px-4 text-sm text-[var(--gamero-muted)]">
+                      Publishing as <span className="ml-2 truncate font-semibold text-[var(--gamero-text)]">{ownerName}</span>
+                    </div>
                   </div>
 
                   <select
                     value={uploadForm.genre}
                     onChange={(event) => setUploadForm((current) => ({ ...current, genre: event.target.value }))}
-                    className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-white focus:border-gamero-lime/60 focus:outline-none"
+                    className="h-12 w-full rounded-2xl border border-[var(--gamero-border)] bg-white/8 px-4 text-[var(--gamero-text)] focus:border-[var(--gamero-accent)]/60 focus:outline-none"
                   >
                     {['Afrobeats', 'Hip-Hop', 'Pop', 'R&B', 'Gospel', 'Amapiano'].map((genre) => (
-                      <option key={genre} value={genre} className="bg-gamero-bg text-white">
+                      <option key={genre} value={genre} className="bg-[var(--gamero-bg)] text-[var(--gamero-text)]">
                         {genre}
                       </option>
                     ))}
@@ -229,29 +229,29 @@ export const Create: React.FC = () => {
                     value={uploadForm.description}
                     onChange={(event) => setUploadForm((current) => ({ ...current, description: event.target.value }))}
                     placeholder="Short description for listeners"
-                    className="min-h-32 w-full rounded-[24px] border border-white/10 bg-white/5 p-4 text-white placeholder:text-zinc-500 focus:border-gamero-lime/60 focus:outline-none"
+                    className="min-h-32 w-full rounded-[24px] border border-[var(--gamero-border)] bg-white/8 p-4 text-[var(--gamero-text)] placeholder:text-[var(--gamero-muted)] focus:border-[var(--gamero-accent)]/60 focus:outline-none"
                   />
 
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className="rounded-[26px] border border-dashed border-white/12 bg-white/[0.03] p-5">
-                      <p className="text-sm font-medium text-white">Audio file</p>
-                      <p className="mt-2 text-sm text-zinc-500">{audioFile ? audioFile.name : 'Choose MP3, WAV, or another playable format'}</p>
+                    <label className="rounded-[26px] border border-dashed border-[var(--gamero-border)] bg-white/[0.03] p-5">
+                      <p className="text-sm font-medium">Audio file</p>
+                      <p className="mt-2 truncate text-sm text-[var(--gamero-muted)]">{audioFile ? audioFile.name : 'Choose MP3, WAV, or another playable format'}</p>
                       <input
                         type="file"
                         accept="audio/*"
                         onChange={(event) => setAudioFile(event.target.files?.[0] || null)}
-                        className="mt-4 block w-full text-sm text-zinc-400 file:mr-4 file:rounded-full file:border-0 file:bg-gamero-lime file:px-4 file:py-2 file:text-sm file:font-medium file:text-black"
+                        className="mt-4 block w-full text-sm text-[var(--gamero-muted)] file:mr-4 file:rounded-full file:border-0 file:bg-[var(--gamero-accent)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-white"
                       />
                     </label>
 
-                    <label className="rounded-[26px] border border-dashed border-white/12 bg-white/[0.03] p-5">
-                      <p className="text-sm font-medium text-white">Cover image</p>
-                      <p className="mt-2 text-sm text-zinc-500">{imageFile ? imageFile.name : 'Choose JPG, PNG, or WEBP from your device'}</p>
+                    <label className="rounded-[26px] border border-dashed border-[var(--gamero-border)] bg-white/[0.03] p-5">
+                      <p className="text-sm font-medium">Cover image</p>
+                      <p className="mt-2 truncate text-sm text-[var(--gamero-muted)]">{imageFile ? imageFile.name : 'Choose JPG, PNG, or WEBP from your device'}</p>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={(event) => setImageFile(event.target.files?.[0] || null)}
-                        className="mt-4 block w-full text-sm text-zinc-400 file:mr-4 file:rounded-full file:border-0 file:bg-gamero-lime file:px-4 file:py-2 file:text-sm file:font-medium file:text-black"
+                        className="mt-4 block w-full text-sm text-[var(--gamero-muted)] file:mr-4 file:rounded-full file:border-0 file:bg-[var(--gamero-accent)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-white"
                       />
                     </label>
                   </div>
@@ -286,9 +286,9 @@ export const Create: React.FC = () => {
                     )}
                   </div>
                   <div className="mt-5">
-                    <p className="text-xl font-semibold text-white">{uploadForm.title || 'Untitled release'}</p>
-                    <p className="mt-1 text-zinc-400">{uploadForm.artist || 'Your artist name'}</p>
-                    <p className="mt-3 text-sm leading-7 text-zinc-500">{uploadForm.description || 'Add a short note to tell listeners what this release is about.'}</p>
+                    <p className="text-xl font-semibold">{uploadForm.title || 'Untitled release'}</p>
+                    <p className="mt-1 text-[var(--gamero-muted)]">{ownerName}</p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--gamero-muted)]">{uploadForm.description || 'Add a short note to tell listeners what this release is about.'}</p>
                   </div>
                 </div>
               </Card>

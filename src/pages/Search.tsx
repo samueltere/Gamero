@@ -249,10 +249,12 @@ export const Search: React.FC = () => {
                       key={mood.label}
                       type="button"
                       onClick={() => setQuery(mood.label)}
-                      className={`rounded-[26px] bg-gradient-to-br ${mood.accent} p-5 text-left text-black transition-transform hover:-translate-y-1`}
+                      className={`flex min-h-[156px] flex-col justify-between overflow-hidden rounded-[26px] bg-gradient-to-br ${mood.accent} p-5 text-left text-black transition-transform hover:-translate-y-1`}
                     >
                       <p className="text-xs uppercase tracking-[0.24em] opacity-70">Browse</p>
-                      <p className="mt-4 font-display text-2xl font-semibold">{mood.label}</p>
+                      <p className="mt-6 break-words font-display text-[clamp(1.6rem,2vw,2.35rem)] font-semibold leading-[0.92]">
+                        {mood.label}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -289,14 +291,14 @@ export const Search: React.FC = () => {
                     <Link
                       key={artist.id}
                       to={`/artist/${artist.id}`}
-                      className="flex items-center gap-4 rounded-[26px] border border-white/8 bg-white/[0.04] p-4 transition-colors hover:bg-white/[0.06]"
+                      className="flex min-w-0 items-center gap-4 rounded-[26px] border border-white/8 bg-white/[0.04] p-4 transition-colors hover:bg-white/[0.06]"
                     >
                       <img src={artist.avatar} alt={artist.name} className="h-16 w-16 rounded-[22px] object-cover" referrerPolicy="no-referrer" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-lg font-semibold text-white">{artist.name}</p>
                         <p className="truncate text-sm text-zinc-400">{artist.genre}</p>
                       </div>
-                      <div className="text-right text-xs uppercase tracking-[0.24em] text-zinc-500">
+                      <div className="hidden text-right text-xs uppercase tracking-[0.24em] text-zinc-500 sm:block">
                         <p>{artistTracks.length} tracks</p>
                         <p className="mt-2">{artist.monthlyListeners}</p>
                       </div>

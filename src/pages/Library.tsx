@@ -150,9 +150,9 @@ export const Library: React.FC = () => {
                   <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     {visiblePlaylists.map((playlist) => (
                       <Card key={playlist.id} className="overflow-hidden rounded-[30px] p-4">
-                        <Link to={`/playlist/${playlist.id}`} className="block">
+                        <Link to={`/playlist/${playlist.id}`} className="block min-w-0">
                           <img src={playlist.coverArt} alt={playlist.name} className="aspect-square w-full rounded-[24px] object-cover" referrerPolicy="no-referrer" />
-                          <p className="mt-4 truncate text-lg font-semibold text-white">{playlist.name}</p>
+                          <p className="mt-4 line-clamp-2 break-words text-lg font-semibold text-white">{playlist.name}</p>
                           <p className="mt-1 text-sm text-zinc-400">{playlist.trackIds.length} tracks</p>
                           <p className="mt-3 line-clamp-2 text-sm leading-6 text-zinc-500">{playlist.description || 'Open the playlist to add, remove, and share tracks.'}</p>
                         </Link>
@@ -179,7 +179,7 @@ export const Library: React.FC = () => {
                   <Link key={album.id} to={`/album/${album.id}`} className="block">
                     <Card className="rounded-[30px] p-4 transition-transform hover:-translate-y-1">
                       <img src={album.coverArt} alt={album.title} className="aspect-square w-full rounded-[24px] object-cover" referrerPolicy="no-referrer" />
-                      <p className="mt-4 truncate text-lg font-semibold text-white">{album.title}</p>
+                      <p className="mt-4 line-clamp-2 break-words text-lg font-semibold text-white">{album.title}</p>
                       <p className="mt-1 truncate text-sm text-zinc-400">{album.artist}</p>
                       <p className="mt-3 text-sm leading-6 text-zinc-500">
                         {album.trackCount} tracks {album.genre ? `• ${album.genre}` : ''}
@@ -202,7 +202,7 @@ export const Library: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <img src={artist.avatar} alt={artist.name} className="h-20 w-20 rounded-[24px] object-cover" referrerPolicy="no-referrer" />
                         <div className="min-w-0">
-                          <p className="truncate text-xl font-semibold text-white">{artist.name}</p>
+                          <p className="line-clamp-2 break-words text-xl font-semibold text-white">{artist.name}</p>
                           <p className="truncate text-sm text-zinc-400">{artist.genre}</p>
                           {followedArtistIds.includes(artist.id) && <p className="mt-2 text-xs uppercase tracking-[0.24em] text-gamero-lime">Following</p>}
                         </div>
