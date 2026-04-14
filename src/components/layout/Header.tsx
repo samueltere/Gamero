@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bell, CheckCheck, ChevronLeft, ChevronRight, LogOut, MoonStar, Search as SearchIcon, SunMedium } from 'lucide-react';
+import { AppLogo } from '@/components/layout/AppLogo';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useMusic } from '@/contexts/MusicContext';
@@ -81,6 +82,10 @@ export const Header: React.FC = () => {
         </div>
 
         <div className="min-w-0">
+          <div className="mb-2 flex items-center gap-3 md:hidden">
+            <AppLogo className="h-10 w-10 rounded-[18px] p-1" />
+            <span className="font-display text-lg font-semibold tracking-tight">Gamero</span>
+          </div>
           <p className="text-xs uppercase tracking-[0.32em] text-[var(--gamero-muted)]">{page.title}</p>
           <h2 className="truncate font-display text-xl font-semibold md:text-2xl">{page.subtitle}</h2>
         </div>

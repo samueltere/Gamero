@@ -1,5 +1,6 @@
 import React from 'react';
-import { Disc3, Home, Library, Search, Sparkles } from 'lucide-react';
+import { Home, Library, Search, Sparkles } from 'lucide-react';
+import { AppLogo } from '@/components/layout/AppLogo';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,9 +21,7 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="hidden h-full w-80 flex-col border-r border-[var(--gamero-border)] bg-[color-mix(in_srgb,var(--gamero-bg)_74%,transparent)] p-6 backdrop-blur-xl md:flex">
       <div className="mb-10 flex items-center gap-3 px-2">
-        <div className="flex h-12 w-12 items-center justify-center rounded-[22px] bg-[var(--gamero-gradient)] text-white shadow-[0_14px_40px_rgba(167,139,250,0.35)]">
-          <Disc3 className="h-5 w-5" />
-        </div>
+        <AppLogo className="h-14 w-14 rounded-[22px] p-1.5" />
         <div>
           <p className="text-[11px] uppercase tracking-[0.32em] text-[var(--gamero-muted)]">Living Sound Lab</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Gamero</h1>
