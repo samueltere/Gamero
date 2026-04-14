@@ -434,14 +434,39 @@ export const Create: React.FC = () => {
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     try {
-      const parsed = JSON.parse(error.message) as { error?: string };
-      if (parsed.error) {
+      const parsed = JSON.parse(error.message) as { error?: unknown };
+      if (typeof parsed.error === 'string' && parsed.error.trim()) {
         return parsed.error;
+      }
+      if (parsed.error && typeof parsed.error === 'object') {
+        const nestedMessage = Reflect.get(parsed.error, 'message');
+        if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+          return nestedMessage;
+        }
       }
     } catch {
       return error.message;
     }
     return error.message;
+  }
+
+  if (error && typeof error === 'object') {
+    const maybeMessage = Reflect.get(error, 'message');
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+      return maybeMessage;
+    }
+
+    const maybeError = Reflect.get(error, 'error');
+    if (typeof maybeError === 'string' && maybeError.trim()) {
+      return maybeError;
+    }
+
+    if (maybeError && typeof maybeError === 'object') {
+      const nestedMessage = Reflect.get(maybeError, 'message');
+      if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+        return nestedMessage;
+      }
+    }
   }
 
   return fallback;
